@@ -4,9 +4,12 @@ import { loadStacks, saveStack, deleteStack } from './storage';
 import { starterStacks } from './starterStacks';
 import { CardViewer } from './components/CardViewer';
 import { StackEditor } from './components/StackEditor';
+import { generateStack, generateStackWithLLM } from './stackGenerator';
 import './App.css';
 
 type View = 'home' | 'play' | 'edit';
+
+const API_KEY_STORAGE = 'stackyard_api_key';
 
 function App() {
   const [stacks, setStacks] = useState<Stack[]>([]);
@@ -14,6 +17,9 @@ function App() {
   const [view, setView] = useState<View>('home');
   const [showAIPrompt, setShowAIPrompt] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
+  const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     const loaded = loadStacks();
@@ -22,6 +28,11 @@ function App() {
       setStacks(starterStacks);
     } else {
       setStacks(loaded);
+    }
+
+    const savedApiKey = localStorage.getItem(API_KEY_STORAGE);
+    if (savedApiKey) {
+      setApiKey(savedApiKey);
     }
   }, []);
 
@@ -93,10 +104,49 @@ function App() {
 
   const handleAIGenerate = async () => {
     if (!aiPrompt.trim()) return;
-    
-    alert('AI generation requires an API key. This feature is optional and will be enhanced in future versions.');
-    setShowAIPrompt(false);
-    setAiPrompt('');
+
+    setIsGenerating(true);
+    try {
+      let newStack: Stack;
+
+      if (apiKey && aiPrompt.length > 50) {
+        try {
+          newStack = await generateStackWithLLM(aiPrompt, apiKey);
+        } catch (error) {
+          console.error('LLM generation failed, falling back to template:', error);
+          newStack = generateStack(aiPrompt);
+        }
+      } else {
+        newStack = generateStack(aiPrompt);
+      }
+
+      saveStack(newStack);
+      setStacks([...stacks, newStack]);
+      setCurrentStack(newStack);
+      setView('edit');
+      setShowAIPrompt(false);
+      setAiPrompt('');
+    } catch (error) {
+      console.error('Stack generation failed:', error);
+      alert('Failed to generate stack. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleSaveApiKey = () => {
+    if (apiKey.trim()) {
+      localStorage.setItem(API_KEY_STORAGE, apiKey.trim());
+    } else {
+      localStorage.removeItem(API_KEY_STORAGE);
+    }
+    setShowApiKeyDialog(false);
+  };
+
+  const handleClearApiKey = () => {
+    localStorage.removeItem(API_KEY_STORAGE);
+    setApiKey('');
+    setShowApiKeyDialog(false);
   };
 
   if (view === 'edit' && currentStack) {
@@ -164,17 +214,43 @@ function App() {
           
           {showAIPrompt && (
             <div className="ai-prompt-box">
+              <div className="ai-header">
+                <h3>Generate a Stack</h3>
+                <button className="settings-btn" onClick={() => setShowApiKeyDialog(true)} title="API Key Settings">
+                  ⚙️
+                </button>
+              </div>
               <textarea
                 value={aiPrompt}
                 onChange={e => setAiPrompt(e.target.value)}
-                placeholder="Describe the tool you want to build... (e.g., 'a habit tracker with 5 daily habits')"
+                placeholder="Describe the tool you want to build..."
                 rows={3}
+                disabled={isGenerating}
               />
-              <button onClick={handleAIGenerate}>Generate Stack</button>
-              <p className="ai-note">
-                Note: AI generation is optional and requires an API key. You can build everything
-                manually!
-              </p>
+              <div className="ai-examples">
+                <strong>Try:</strong>
+                <button onClick={() => setAiPrompt('water intake tracker')}>water tracker</button>
+                <button onClick={() => setAiPrompt('checklist with 10 items')}>checklist</button>
+                <button onClick={() => setAiPrompt('5 daily habits')}>habit tracker</button>
+                <button onClick={() => setAiPrompt('flashcards for studying')}>flashcards</button>
+              </div>
+              <button 
+                className="generate-btn" 
+                onClick={handleAIGenerate}
+                disabled={isGenerating || !aiPrompt.trim()}
+              >
+                {isGenerating ? 'Generating...' : 'Generate Stack'}
+              </button>
+              <div className="ai-note">
+                <p>
+                  <strong>✨ Built-in Templates:</strong> Works without an API key! Supports counters,
+                  trackers, checklists, habits, flashcards, and notes.
+                </p>
+                <p>
+                  <strong>🤖 Optional LLM:</strong> Add your OpenAI API key (⚙️ above) for custom prompts.
+                  Key stored locally, never sent to our servers.
+                </p>
+              </div>
             </div>
           )}
         </section>
@@ -244,6 +320,36 @@ function App() {
           browser
         </p>
       </footer>
+
+      {showApiKeyDialog && (
+        <div className="modal-overlay" onClick={() => setShowApiKeyDialog(false)}>
+          <div className="modal-dialog" onClick={e => e.stopPropagation()}>
+            <h2>API Key Settings</h2>
+            <p>
+              Optional: Add your OpenAI API key to enable LLM-powered stack generation for complex
+              or custom prompts. The built-in template generator works without a key.
+            </p>
+            <div className="api-key-input">
+              <input
+                type="password"
+                value={apiKey}
+                onChange={e => setApiKey(e.target.value)}
+                placeholder="sk-..."
+              />
+            </div>
+            <div className="modal-actions">
+              <button onClick={handleSaveApiKey}>Save</button>
+              <button onClick={handleClearApiKey}>Clear</button>
+              <button onClick={() => setShowApiKeyDialog(false)}>Cancel</button>
+            </div>
+            <p className="modal-note">
+              <strong>Privacy:</strong> Your API key is stored only in your browser's localStorage
+              and never sent to our servers. It's used directly for OpenAI API calls from your
+              browser.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

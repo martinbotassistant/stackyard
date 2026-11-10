@@ -75,10 +75,26 @@ The build output goes to the `dist/` directory, which can be deployed to any sta
 - Click the **✕** button on a stack card
 - Confirm the deletion
 
-### AI-Assisted Creation (Optional)
-- Click **✨ AI-Assisted Creation** on the home screen
-- This feature is a placeholder for future AI integration (requires an API key)
-- You can build everything manually without AI
+### AI-Assisted Stack Generation
+1. Click **✨ AI-Assisted Creation** on the home screen
+2. Describe the tool you want to build (e.g., "water intake tracker", "5 daily habits", "flashcards for studying")
+3. Click **Generate Stack**
+
+**Built-in Templates** (no API key needed):
+- Recognizes common patterns: counter, tracker, checklist, habit, flashcards, notes
+- Parses numbers and units from your description
+- Examples:
+  - "water intake tracker" → generates a tracker with glasses/cups
+  - "checklist with 10 items" → generates a 10-item checklist
+  - "track 5 daily habits" → generates a habit tracker with 5 slots
+  - "flashcards for vocab" → generates a vocabulary flashcard deck
+  - "coffee counter" → generates a coffee intake counter
+
+**Optional LLM Enhancement**:
+- Click the ⚙️ settings icon to add your OpenAI API key
+- Used for complex or custom prompts that don't match built-in templates
+- Key stored only in your browser's localStorage
+- Falls back to template generator if LLM fails
 
 ## What Can You Build?
 
@@ -107,12 +123,14 @@ src/
   storage.ts            # localStorage persistence layer
   actions.ts            # Action executor (button click logic)
   starterStacks.ts      # Demo/template stacks
+  stackGenerator.ts     # AI-assisted stack generation (templates + LLM)
   App.tsx               # Main app component (home, play, edit views)
   main.tsx              # Entry point
   components/
     CardViewer.tsx      # Renders a card in play or edit mode
     StackEditor.tsx     # Full-featured stack editor UI
     ObjectEditor.tsx    # Property panel for editing objects
+  *.test.ts             # Unit tests
 ```
 
 ### Data Model
@@ -139,7 +157,11 @@ src/
 npm test
 ```
 
-Lightweight tests for the core model are included using Vitest.
+Tests cover:
+- Core action execution (buttons, fields, toggles, increments)
+- Stack generator templates (counter, tracker, checklist, habit, flashcards, notes)
+- Template keyword matching and parameter extraction
+- Generated stack validity
 
 ## License
 
