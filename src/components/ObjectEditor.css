@@ -1,0 +1,125 @@
+.object-editor {
+  padding: 20px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.object-editor.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-style: italic;
+}
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #ddd;
+}
+
+.editor-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.editor-section {
+  margin-bottom: 16px;
+}
+
+.editor-section label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  font-size: 14px;
+  color: #333;
+}
+
+.editor-section input[type='text'],
+.editor-section input[type='number'],
+.editor-section select,
+.editor-section textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.editor-section textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.input-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.action-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.action-editor select,
+.action-editor input {
+  width: 100%;
+}
+
+.add-btn,
+.delete-btn,
+.small-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-btn {
+  background: #4caf50;
+  color: white;
+  width: 100%;
+}
+
+.add-btn:hover {
+  background: #45a049;
+}
+
+.delete-btn {
+  background: #f44336;
+  color: white;
+}
+
+.delete-btn:hover {
+  background: #da190b;
+}
+
+.small-btn {
+  background: #ff5722;
+  color: white;
+  padding: 4px 8px;
+  font-size: 12px;
+  align-self: flex-end;
+}
+
+.small-btn:hover {
+  background: #e64a19;
+}
